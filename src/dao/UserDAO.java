@@ -67,6 +67,28 @@ public class UserDAO {
             return false;
         }
     }
+    /**
+     * Hàm kiểm tra xem tên đăng nhập đã tồn tại trong DB chưa
+     * @param username Tên cần kiểm tra
+     * @return true nếu đã tồn tại, false nếu chưa có
+     */
+    public boolean isUsernameExists(String username) {
+        String sql = "SELECT COUNT(*) FROM users WHERE username = ?";
+        try {
+            Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, username);
+            
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                return count > 0; // Nếu count > 0 nghĩa là đã có người dùng tên này
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
     // Hàm Main để TV2 tự kiểm chứng trước khi bàn giao cho nhóm
 //    public static void main(String[] args) {
@@ -84,17 +106,22 @@ public class UserDAO {
 //    }
     public static void main(String[] args) {
         UserDAO dao = new UserDAO();
+        String targetUser = "khachhang_vip"; // Tên muốn đăng ký
 
-        // Tạo một đối tượng người dùng mới để đi đăng ký
-        User newUser = new User();
-        newUser.setUsername("khachhang_moi");
-        newUser.setPassword("password678");
-        newUser.setEmail("khach@gmail.com");
-
-        if (dao.registerUser(newUser)) {
-            System.out.println("🎉 Đăng ký THÀNH CÔNG! Chào mừng khách hàng mới.");
+        System.out.println("--- ĐANG KIỂM TRA TÊN ĐĂNG NHẬP ---");
+        if (dao.isUsernameExists(targetUser)) {
+            System.out.println("❌ Tên '" + targetUser + "' đã có người sử dụng. Vui lòng chọn tên khác!");
         } else {
-            System.out.println("❌ Đăng ký THẤT BẠI! (Có thể do trùng tên đăng nhập).");
+            System.out.println("✅ Tên '" + targetUser + "' còn trống. Tiến hành đăng ký...");
+            
+            User newUser = new User();
+            newUser.setUsername(targetUser);
+            newUser.setPassword("matkhau123");
+            newUser.setEmail("vip@gmail.com");
+
+            if (dao.registerUser(newUser)) {
+                System.out.println("🎉 Đăng ký THÀNH CÔNG tài khoản: " + targetUser);
+            }
         }
     }
 }
