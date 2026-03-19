@@ -49,4 +49,59 @@ public class OrderDAO {
             return false;
         }
     }
+    /**
+     * Hàm tính tổng doanh thu từ trước đến nay
+     * @return Tổng số tiền thu được (double)
+     */
+    public double getTotalRevenue() {
+        String sql = "SELECT SUM(total_amount) FROM orders WHERE status = 'PAID'"; 
+        // Chỉ tính những đơn đã thanh toán
+        try {
+            Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * Hàm thống kê doanh thu theo từng tháng trong năm
+     * @param year Năm muốn thống kê
+     * @return Một danh sách chứa (Tháng - Doanh thu)
+     */
+    public void printMonthlyRevenue(int year) {
+        String sql = "SELECT MONTH(order_date) as thang, SUM(total_amount) as doanh_thu " +
+                     "FROM orders WHERE YEAR(order_date) = ? AND status = 'PAID' " +
+                     "GROUP BY MONTH(order_date)";
+        try {
+            Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, year);
+            ResultSet rs = ps.executeQuery();
+            
+            System.out.println("--- THỐNG KÊ DOANH THU NĂM " + year + " ---");
+            while (rs.next()) {
+                int month = rs.getInt("thang");
+                double revenue = rs.getDouble("doanh_thu");
+                System.out.println("Tháng " + month + ": " + String.format("%,.0f", revenue) + " VNĐ");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void main(String[] args) {
+        OrderDAO dao = new OrderDAO();
+        
+        // 1. Xem tổng tiền trong két sắt
+        double total = dao.getTotalRevenue();
+        System.out.println("💰 TỔNG DOANH THU HỆ THỐNG: " + String.format("%,.0f", total) + " VNĐ");
+        
+        // 2. Xem doanh thu chi tiết các tháng trong năm 2026
+        dao.printMonthlyRevenue(2026);
+    }
 }
