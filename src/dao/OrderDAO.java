@@ -1,0 +1,52 @@
+package dao;
+
+import java.sql.*;
+import java.util.List;
+import DBpackage.DBConnection;
+import model.Order;
+import model.OrderDetail;
+
+public class OrderDAO {
+    
+    public boolean createOrder(Order order, List<OrderDetail> details) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Bật chế độ Giao dịch (Transaction)
+
+            // 1. Lưu vào bảng orders
+            String sqlOrder = "INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, 'PENDING')";
+            PreparedStatement psOrder = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS);
+            psOrder.setInt(1, order.getUserId());
+            psOrder.setDouble(2, order.getTotalAmount());
+            psOrder.executeUpdate();
+
+            // Lấy ID hóa đơn vừa tạo
+            ResultSet rs = psOrder.getGeneratedKeys();
+            int orderId = 0;
+            if (rs.next()) {
+                orderId = rs.getInt(1);
+            }
+
+            // 2. Lưu danh sách chi tiết đơn hàng
+            String sqlDetail = "INSERT INTO order_details (order_id, product_id, quantity, unit_price) VALUES (?, ?, ?, ?)";
+            PreparedStatement psDetail = conn.prepareStatement(sqlDetail);
+            
+            for (OrderDetail d : details) {
+                psDetail.setInt(1, orderId);
+                psDetail.setInt(2, d.getProductId());
+                psDetail.setInt(3, d.getQuantity());
+                psDetail.setDouble(4, d.getUnitPrice());
+                psDetail.addBatch(); // Gom lại để chạy một lần cho nhanh
+            }
+            psDetail.executeBatch();
+
+            conn.commit(); // Hoàn tất giao dịch
+            return true;
+        } catch (Exception e) {
+            try { if (conn != null) conn.rollback(); } catch (Exception ex) {} // Lỗi thì hủy hết
+            e.printStackTrace();
+            return false;
+        }
+    }
+}

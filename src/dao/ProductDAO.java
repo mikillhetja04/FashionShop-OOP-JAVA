@@ -91,6 +91,39 @@ public class ProductDAO {
             return false;
         }
     }
+    /**
+     * Hàm tìm kiếm sản phẩm theo tên (không cần chính xác 100%)
+     * @param keyword Từ khóa người dùng nhập vào (ví dụ: "thun", "Jean")
+     * @return Danh sách các sản phẩm có tên chứa từ khóa đó
+     */
+    public List<Product> searchProductByName(String keyword) {
+        List<Product> list = new ArrayList<>();
+        // Sử dụng LIKE để tìm kiếm tương đối
+        String sql = "SELECT * FROM products WHERE product_name LIKE ?";
+        
+        try {
+            Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql);
+            
+            // Thiết lập tham số: %keyword% (Tìm bất kỳ tên nào có chứa keyword)
+            ps.setString(1, "%" + keyword + "%");
+            
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Product p = new Product();
+                p.setProductId(rs.getInt("product_id"));
+                p.setProductName(rs.getString("product_name"));
+                p.setPrice(rs.getDouble("price"));
+                p.setSize(rs.getString("size"));
+                p.setColor(rs.getString("color"));
+                p.setStockQuantity(rs.getInt("stock_quantity"));
+                list.add(p);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
 
     // Viết hàm main để tự test luôn cho nóng
 //    public static void main(String[] args) {
@@ -105,28 +138,44 @@ public class ProductDAO {
 //                             + " | Màu: " + p.getColor());
 //        }
 //    }
+//    public static void main(String[] args) {
+//        ProductDAO dao = new ProductDAO();
+//
+//        // 1. Test Sửa sản phẩm số 1 (Áo thun)
+//        Product pUpdate = new Product();
+//        pUpdate.setProductId(1); // ID sản phẩm muốn sửa
+//        pUpdate.setCategoryId(1);
+//        pUpdate.setProductName("Áo thun Cotton CAO CẤP"); // Đổi tên
+//        pUpdate.setPrice(199000.0); // Đổi giá
+//        pUpdate.setSize("XL");
+//        pUpdate.setColor("Xanh Navy");
+//        pUpdate.setStockQuantity(100);
+//
+//        if (dao.updateProduct(pUpdate)) {
+//            System.out.println("✅ Đã cập nhật sản phẩm số 1 thành công!");
+//        }
+//
+//        // 2. Test Xóa sản phẩm số 5
+//        if (dao.deleteProduct(5)) {
+//            System.out.println("🗑️ Đã xóa sản phẩm số 5 khỏi hệ thống!");
+//        } else {
+//            System.out.println("❌ Xóa thất bại (Sản phẩm không tồn tại hoặc dính hóa đơn).");
+//        }
+//    }
     public static void main(String[] args) {
         ProductDAO dao = new ProductDAO();
+        String keyword = "thun"; // Thử tìm từ khóa này
 
-        // 1. Test Sửa sản phẩm số 1 (Áo thun)
-        Product pUpdate = new Product();
-        pUpdate.setProductId(1); // ID sản phẩm muốn sửa
-        pUpdate.setCategoryId(1);
-        pUpdate.setProductName("Áo thun Cotton CAO CẤP"); // Đổi tên
-        pUpdate.setPrice(199000.0); // Đổi giá
-        pUpdate.setSize("XL");
-        pUpdate.setColor("Xanh Navy");
-        pUpdate.setStockQuantity(100);
+        System.out.println("🔍 ĐANG TÌM KIẾM SẢN PHẨM VỚI TỪ KHÓA: '" + keyword + "'");
+        List<Product> results = dao.searchProductByName(keyword);
 
-        if (dao.updateProduct(pUpdate)) {
-            System.out.println("✅ Đã cập nhật sản phẩm số 1 thành công!");
-        }
-
-        // 2. Test Xóa sản phẩm số 5
-        if (dao.deleteProduct(5)) {
-            System.out.println("🗑️ Đã xóa sản phẩm số 5 khỏi hệ thống!");
+        if (results.isEmpty()) {
+            System.out.println("❌ Không tìm thấy sản phẩm nào phù hợp!");
         } else {
-            System.out.println("❌ Xóa thất bại (Sản phẩm không tồn tại hoặc dính hóa đơn).");
+            System.out.println("✅ Tìm thấy " + results.size() + " sản phẩm:");
+            for (Product p : results) {
+                System.out.println("- " + p.getProductName() + " | Giá: " + p.getPrice());
+            }
         }
     }
 }
