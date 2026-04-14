@@ -3,51 +3,50 @@ package view;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Cửa sổ chính của ứng dụng sau khi đăng nhập thành công.
+ *
+ * Phân quyền giao diện:
+ *  - ADMIN   : 3 tab — Sản Phẩm (full CRUD), Đơn Hàng, Thống Kê Doanh Thu
+ *  - CUSTOMER: 2 tab — Sản Phẩm (chỉ xem), Đơn Hàng
+ */
 public class MainForm extends JFrame {
-    private JTabbedPane tabbedPane;
+    private static final long serialVersionUID = 1L;
 
-    public MainForm(String role, String username) {
-        setTitle("HỆ THỐNG QUẢN LÝ FASHION SHOP - [User: " + username + "]");
-        setSize(1000, 700);
+    public MainForm(int userId, String role, String username) {
+        setTitle("FASHION SHOP  ·  " + username + "  [" + role + "]");
+        setSize(1100, 720);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // 1. Khởi tạo thanh Tab
-        tabbedPane = new JTabbedPane();
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Arial", Font.BOLD, 13));
 
-        // 2. Thêm các Tab chức năng (Hiện tại mình tạo Panel trống, sau này lắp code vào)
-        tabbedPane.addTab("📦 Quản lý Sản phẩm", createProductPanel());
-        tabbedPane.addTab("🛒 Quản lý Đơn hàng", createOrderPanel());
-        
-        // Chỉ Admin mới thấy Tab Thống kê
-        if (role.equalsIgnoreCase("ADMIN")) {
-            tabbedPane.addTab("📊 Thống kê Doanh thu", createStatPanel());
+        // Tab 1 — Quản lý sản phẩm (phân quyền trong ProductPanel)
+        tabbedPane.addTab("📦 Sản Phẩm", new ProductPanel(role));
+
+        // Tab 2 — Giỏ hàng & Thanh toán (truyền userId thật)
+        tabbedPane.addTab("🛒 Đơn Hàng", new OrderPanel(userId));
+
+        // Tab 3 — Thống kê doanh thu (chỉ Admin)
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            tabbedPane.addTab("📊 Thống Kê Doanh Thu", new StatPanel());
         }
 
-        add(tabbedPane);
+        // Thanh trạng thái
+        JLabel statusBar = new JLabel(
+            "  Đăng nhập: " + username + "  |  Quyền: " + role + "  |  ID: " + userId,
+            JLabel.LEFT);
+        statusBar.setBorder(BorderFactory.createEtchedBorder());
+        statusBar.setFont(new Font("Arial", Font.ITALIC, 11));
+        statusBar.setForeground(Color.DARK_GRAY);
+
+        add(tabbedPane, BorderLayout.CENTER);
+        add(statusBar, BorderLayout.SOUTH);
     }
 
-    // Giao diện Quản lý sản phẩm (Nơi sẽ hiện cái bảng)
-    private JPanel createProductPanel() {
-    	return new ProductPanel();
-    }
-
-    // Giao diện Đơn hàng
-    private JPanel createOrderPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("Giao diện Hóa đơn & Giỏ hàng sẽ hiện ở đây", SwingConstants.CENTER));
-        return panel;
-    }
-
-    // Giao diện Thống kê
-    private JPanel createStatPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("Biểu đồ & Báo cáo doanh thu sẽ hiện ở đây", SwingConstants.CENTER));
-        return panel;
-    }
-
+    /** Test nhanh — chạy trực tiếp bằng Admin giả lập */
     public static void main(String[] args) {
-        // Chạy thử với quyền Admin
-        SwingUtilities.invokeLater(() -> new MainForm("ADMIN", "Hiep").setVisible(true));
+        SwingUtilities.invokeLater(() -> new MainForm(1, "ADMIN", "TestAdmin").setVisible(true));
     }
 }

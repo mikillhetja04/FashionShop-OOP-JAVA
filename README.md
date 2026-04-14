@@ -1,61 +1,125 @@
-🛒 Fashion Shop - Hệ Thống Quản Lý Cửa Hàng Thời Trang
-Đồ án môn học: Lập trình hướng đối tượng (OOP) > Ngôn ngữ: Java | Database: MySQL | Kiến trúc: MVC & DAO Pattern
+# 🛒 Fashion Shop — Hệ Thống Quản Lý Cửa Hàng Thời Trang
 
-🌟 Tổng Quan Dự Án
-Hệ thống quản lý và bán hàng thời trang trực tuyến được xây dựng dựa trên các nguyên tắc của lập trình hướng đối tượng. Dự án tập trung vào tính bảo mật, hiệu suất truy vấn và trải nghiệm người dùng tối ưu.
+> **Đồ án môn học:** Lập trình hướng đối tượng (OOP)  
+> **Ngôn ngữ:** Java | **Database:** MySQL | **Kiến trúc:** MVC & DAO Pattern
 
-🛠️ Tech Stack & Công Cụ
-Ngôn ngữ: Java 25 (JDK 25)
+---
 
-Thư viện: JDBC (MySQL Connector/J 9.6.0)
+## 🌟 Tổng Quan Dự Án
 
-Cơ sở dữ liệu: MySQL 8.0+
+Hệ thống quản lý và bán hàng thời trang được xây dựng trên nền tảng Java Swing & JDBC, áp dụng đầy đủ các nguyên tắc OOP: **Encapsulation**, **Inheritance**, **Polymorphism**, **Abstraction**.
 
-Công cụ: Eclipse IDE, Git/GitHub, MySQL Workbench
+---
 
-🏗️ Cấu Trúc Hệ Thống (Mô Hình MVC)
-Hệ thống được chia thành các Package rành mạch:
+## 🛠️ Tech Stack
 
-model: Chứa các lớp đối tượng (POJO) áp dụng tính Đóng gói (Encapsulation).
+| Thành phần | Công nghệ |
+|---|---|
+| Ngôn ngữ | Java (JDK 17+) |
+| Giao diện | Java Swing (MVC) |
+| CSDL | MySQL 8.0+ |
+| Kết nối DB | JDBC — MySQL Connector/J 9.6.0 |
+| Bảo mật | SHA-256 + Salt (SecureRandom) |
+| Công cụ | Eclipse IDE, Git/GitHub, MySQL Workbench |
 
-dao: Tầng xử lý logic dữ liệu (Data Access Object) với JDBC.
+---
 
-DBpackage: Quản lý kết nối Cơ sở dữ liệu tập trung.
+## 🏗️ Cấu Trúc Hệ Thống (MVC + DAO)
 
-lib: Chứa thư viện kết nối ngoại vi (.jar).
+```
+src/
+├── DBpackage/         — Kết nối CSDL (đọc từ config.properties)
+│   └── DBConnection.java
+├── model/             — POJO (Encapsulation)
+│   ├── User.java
+│   ├── Product.java
+│   ├── Order.java
+│   ├── OrderDetail.java
+│   ├── CartItem.java
+│   ├── Category.java
+│   └── DiscountCode.java
+├── dao/               — Data Access Object (Abstraction)
+│   ├── IProductDAO.java  ← Interface
+│   ├── IUserDAO.java     ← Interface
+│   ├── IOrderDAO.java    ← Interface
+│   ├── IDiscountDAO.java ← Interface
+│   ├── ProductDAO.java
+│   ├── UserDAO.java
+│   ├── OrderDAO.java
+│   └── DiscountDAO.java
+├── service/           — Business Logic
+│   └── PaymentService.java
+├── utils/             — Tiện ích
+│   ├── HashUtils.java    ← SHA-256 + Salt
+│   └── DataValidator.java
+├── view/              — Giao diện Swing (MVC - View)
+│   ├── LoginForm.java
+│   ├── MainForm.java
+│   ├── ProductPanel.java ← Phân quyền Admin/Customer
+│   ├── OrderPanel.java   ← Giỏ hàng & Thanh toán
+│   └── StatPanel.java    ← Thống kê doanh thu (Admin only)
+└── config.properties  — Cấu hình DB (KHÔNG push lên GitHub)
+```
 
-🚀 Các Tính Năng Đã Hoàn Thành (Backend Core)
-1. Quản lý Người dùng & Bảo mật
-[x] Authentication: Đăng nhập phân quyền (Admin/Customer).
+---
 
-[x] Registration: Đăng ký thành viên mới với cơ chế kiểm tra trùng lặp tài khoản.
+## 🚀 Tính Năng Đã Hoàn Thành
 
-[x] Security: Chống tấn công SQL Injection bằng PreparedStatement.
+### 1. Quản lý Người dùng & Bảo mật
+- ✅ Đăng nhập phân quyền Admin / Customer
+- ✅ Đăng ký tài khoản mới
+- ✅ Bảo mật mật khẩu: **SHA-256 + Salt ngẫu nhiên** (chống Rainbow Table)
+- ✅ Chống SQL Injection bằng `PreparedStatement`
 
-2. Quản lý Kho hàng (CRUD)
-[x] Product Management: Thêm, Sửa, Xóa sản phẩm trực tiếp từ Java.
+### 2. Quản lý Kho hàng (Admin)
+- ✅ Thêm / Sửa / Xóa sản phẩm
+- ✅ Tìm kiếm sản phẩm theo tên (LIKE %keyword%)
+- ✅ Validate đầu vào: tên không rỗng, giá > 0, tồn kho >= 0
+- ✅ Phân quyền: Customer chỉ xem, không thấy nút CRUD
 
-[x] Smart Search: Tìm kiếm sản phẩm theo từ khóa linh hoạt (LIKE %keyword%).
+### 3. Giỏ hàng & Thanh toán
+- ✅ Thêm / Xóa sản phẩm khỏi giỏ
+- ✅ Kiểm tra tồn kho trước khi thêm vào giỏ
+- ✅ Áp mã giảm giá (tra cứu từ DB)
+- ✅ Tự động tính: Tổng gốc → Giảm giá → Thuế VAT 10% → Thành tiền
+- ✅ Transaction an toàn: tạo đơn + giảm tồn kho trong 1 giao dịch (Commit/Rollback)
 
-3. Hệ thống Giỏ hàng & Giao dịch
-[x] Transaction Processing: Xử lý thanh toán an toàn với cơ chế Commit/Rollback.
+### 4. Thống kê & Báo cáo (Admin)
+- ✅ Doanh thu theo tháng (biểu đồ cột trực quan)
+- ✅ Tổng doanh thu toàn hệ thống
+- ✅ Lọc theo năm
 
-[x] Batch Processing: Tối ưu hiệu suất khi lưu chi tiết hóa đơn số lượng lớn.
+### 5. Kiến trúc & Chất lượng Code
+- ✅ Interface DAO: `IProductDAO`, `IUserDAO`, `IOrderDAO`, `IDiscountDAO`
+- ✅ `toString()` đầy đủ cho tất cả Model
+- ✅ Cấu hình DB từ `config.properties` (không hardcode)
+- ✅ Auto-close kết nối với try-with-resources (chống rò rỉ)
 
-4. Báo cáo & Thống kê (Dành cho Admin)
-[x] Revenue Analytics: Thống kê tổng doanh thu thực tế.
+---
 
-[x] Monthly Reporting: Phân tích doanh thu theo từng tháng trong năm bằng SQL nâng cao.
+## 📖 Hướng Dẫn Cài Đặt
 
-📖 Hướng Dẫn Cài Đặt (Cho Thành Viên Nhóm/Giảng Viên)
-Clone dự án: git clone https://github.com/mikillhetja04/FashionShop-OOP-JAVA.git
+### 1. Clone & Import
+```bash
+git clone https://github.com/mikillhetja04/FashionShop-OOP-JAVA.git
+```
+Import vào Eclipse: **File → Import → Existing Projects into Workspace**
 
-Import Database: Chạy file Script SQL (đã cung cấp) trong MySQL Workbench.
+### 2. Import Database
+Chạy file SQL script trong MySQL Workbench
 
-Cấu hình kết nối: Sửa username và password trong file DBConnection.java cho khớp với máy cá nhân.
+### 3. Tạo file config.properties
+Tạo file `src/config.properties` (không được push lên GitHub):
+```properties
+db.url=jdbc:mysql://localhost:3306/fashion_shop_db?useSSL=false&serverTimezone=Asia/Ho_Chi_Minh
+db.user=root
+db.password=YOUR_PASSWORD_HERE
+```
 
-Run: Chạy file Main hoặc các file DAO để kiểm tra logic.
+### 4. Chạy ứng dụng
+Chạy class `view.LoginForm` — đăng nhập là xong!
 
-Thực hiện bởi: TV2 - Backend Developer
-Trạng thái: Hoàn thành 100% Core Backend (Tuần 4)
+---
 
+> Thực hiện bởi: **TV2 — Backend Developer**  
+> Trạng thái: ✅ **Hoàn thành đầy đủ Backend + Frontend (Swing GUI)**

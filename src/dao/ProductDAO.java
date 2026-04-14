@@ -1,20 +1,21 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import DBpackage.DBConnection; 
+import DBpackage.DBConnection;
 import model.Product;
 
-public class ProductDAO {
+/**
+ * Tầng truy cập dữ liệu sản phẩm — implement IProductDAO.
+ */
+public class ProductDAO implements IProductDAO {
 
-    // 1. Hàm Lấy toàn bộ danh sách sản phẩm
+    /** Lấy toàn bộ danh sách sản phẩm */
+    @Override
     public List<Product> getAllProducts() {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM products";
+        String sql = "SELECT * FROM products ORDER BY product_id";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -24,19 +25,19 @@ public class ProductDAO {
                 list.add(mapResultSetToProduct(rs));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Lỗi lấy danh sách sản phẩm: " + e.getMessage());
         }
         return list;
     }
 
-    // 2. Hàm Thêm mới sản phẩm
+    /** Thêm sản phẩm mới */
+    @Override
     public boolean addProduct(Product p) {
         String sql = "INSERT INTO products (category_id, product_name, price, stock_quantity) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DBpackage.DBConnection.getConnection();
+        try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Dùng getCategoryId() từ đối tượng — không ép cứng nữa
             ps.setInt(1, p.getCategoryId());
             ps.setString(2, p.getProductName());
             ps.setDouble(3, p.getPrice());
@@ -45,14 +46,17 @@ public class ProductDAO {
             return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-            System.err.println("❌ Lỗi thêm sản phẩm: " + e.getMessage());
+            System.err.println("Lỗi thêm sản phẩm: " + e.getMessage());
             return false;
         }
     }
 
-    // 3. Hàm Cập nhật sản phẩm
+    /** Cập nhật sản phẩm */
+    @Override
     public boolean updateProduct(Product p) {
-        String sql = "UPDATE products SET category_id = ?, product_name = ?, price = ?, size = ?, color = ?, stock_quantity = ? WHERE product_id = ?";
+        String sql = "UPDATE products SET category_id = ?, product_name = ?, price = ?, " +
+                     "size = ?, color = ?, stock_quantity = ? WHERE product_id = ?";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -66,30 +70,33 @@ public class ProductDAO {
 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Lỗi cập nhật sản phẩm: " + e.getMessage());
             return false;
         }
     }
 
-    // 4. Hàm Xóa sản phẩm
+    /** Xóa sản phẩm theo ID */
+    @Override
     public boolean deleteProduct(int productId) {
         String sql = "DELETE FROM products WHERE product_id = ?";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setInt(1, productId);
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
-            System.err.println("Lỗi: Không thể xóa sản phẩm do dính ràng buộc hóa đơn!");
+            System.err.println("Lỗi xóa sản phẩm (có thể đang được dùng trong đơn hàng): " + e.getMessage());
             return false;
         }
     }
 
-    // 5. Hàm Tìm kiếm theo tên
+    /** Tìm kiếm sản phẩm theo tên (LIKE %keyword%) */
+    @Override
     public List<Product> searchProductByName(String keyword) {
         List<Product> list = new ArrayList<>();
-        String sql = "SELECT * FROM products WHERE product_name LIKE ?";
-        
+        String sql = "SELECT * FROM products WHERE product_name LIKE ? ORDER BY product_id";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -100,12 +107,12 @@ public class ProductDAO {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Lỗi tìm kiếm sản phẩm: " + e.getMessage());
         }
         return list;
     }
 
-    // Hàm phụ để tránh lặp code (Helper Method)
+    /** Helper: map ResultSet → Product object */
     private Product mapResultSetToProduct(ResultSet rs) throws Exception {
         Product p = new Product();
         p.setProductId(rs.getInt("product_id"));
@@ -118,9 +125,9 @@ public class ProductDAO {
         return p;
     }
 
-    // Hàm main để test nhanh
+    /** Test nhanh */
     public static void main(String[] args) {
         ProductDAO dao = new ProductDAO();
-        System.out.println("Kiểm tra kết nối và lấy dữ liệu: " + dao.getAllProducts().size() + " sản phẩm.");
+        System.out.println("Tổng sản phẩm: " + dao.getAllProducts().size());
     }
 }

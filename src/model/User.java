@@ -61,4 +61,10 @@ public class User {
     public void setRole(String role) {
         this.role = role;
     }
+
+    @Override
+    public String toString() {
+        return String.format("User[id=%d, username=%s, email=%s, role=%s]",
+                userId, username, email, role);
+    }
 }

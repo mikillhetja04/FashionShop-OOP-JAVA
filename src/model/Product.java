@@ -53,4 +53,10 @@ public class Product {
 
     public int getStockQuantity() { return stockQuantity; }
     public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
+
+    @Override
+    public String toString() {
+        return String.format("Product[id=%d, name=%s, price=%,.0f VNĐ, stock=%d]",
+                productId, productName, price, stockQuantity);
+    }
 }
