@@ -29,30 +29,23 @@ public class ProductDAO {
         return list;
     }
 
-    // 2. Hàm Thêm mới sản phẩm (BỔ SUNG ĐỂ HẾT LỖI Ở PRODUCTPANEL)
+    // 2. Hàm Thêm mới sản phẩm
     public boolean addProduct(Product p) {
-        // Lưu ý: Kiểm tra kỹ tên bảng và tên cột có giống 100% trong MySQL không
         String sql = "INSERT INTO products (category_id, product_name, price, stock_quantity) VALUES (?, ?, ?, ?)";
-        
+
         try (Connection conn = DBpackage.DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            System.out.println("--- Đang chuẩn bị thêm sản phẩm: " + p.getProductName() + " ---");
-            
-            // GIẢI PHÁP TẠM THỜI: Ép cứng Category ID = 1 (Hãy chắc chắn bảng categories đã có ID 1)
-            ps.setInt(1, 1); 
+
+            // Dùng getCategoryId() từ đối tượng — không ép cứng nữa
+            ps.setInt(1, p.getCategoryId());
             ps.setString(2, p.getProductName());
             ps.setDouble(3, p.getPrice());
             ps.setInt(4, p.getStockQuantity());
 
-            int rowsAffected = ps.executeUpdate();
-            System.out.println("==> MySQL báo cáo: Đã thêm " + rowsAffected + " dòng.");
-            
-            return rowsAffected > 0;
-            
+            return ps.executeUpdate() > 0;
+
         } catch (Exception e) {
-            System.err.println("❌ LỖI RỒI BẠN ƠI! Lỗi chi tiết bên dưới:");
-            e.printStackTrace(); // ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT ĐỂ BIẾT LỖI GÌ
+            System.err.println("❌ Lỗi thêm sản phẩm: " + e.getMessage());
             return false;
         }
     }

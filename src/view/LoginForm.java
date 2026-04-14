@@ -52,18 +52,31 @@ public class LoginForm extends JFrame {
     }
 
     private void xuLyDangNhap() {
-        String user = txtUsername.getText();
+        String user = txtUsername.getText().trim();
         String pass = new String(txtPassword.getPassword());
 
-        // GỌI BACKEND CỦA BẠN (TV2) Ở ĐÂY!
+        // Validate đầu vào trước khi gọi DB
+        if (user.isEmpty() || pass.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!",
+                "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         UserDAO dao = new UserDAO();
         User u = dao.checkLogin(user, pass);
 
         if (u != null) {
-            JOptionPane.showMessageDialog(this, "Chào mừng " + u.getRole() + ": " + u.getUsername() + "\nĐăng nhập thành công!");
-            // Sau này ở đây sẽ mở trang Admin hoặc Trang Chủ
+            // Đóng cửa sổ đăng nhập
+            this.dispose();
+            // Mở MainForm và truyền role + username — để phân quyền giao diện
+            SwingUtilities.invokeLater(() -> new MainForm(u.getRole(), u.getUsername()).setVisible(true));
         } else {
-            JOptionPane.showMessageDialog(this, "Sai tài khoản hoặc mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                "Sai tài khoản hoặc mật khẩu! Vui lòng thử lại.",
+                "Lỗi Đăng Nhập", JOptionPane.ERROR_MESSAGE);
+            txtPassword.setText(""); // Xóa ô mật khẩu để nhập lại
+            txtPassword.requestFocus();
         }
     }
 
