@@ -38,7 +38,7 @@ public class ProductDAO implements IProductDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, p.getCategoryId());
+            ps.setInt(1, resolveCategoryId(conn, p.getCategoryId()));
             ps.setString(2, p.getProductName());
             ps.setDouble(3, p.getPrice());
             ps.setInt(4, p.getStockQuantity());
@@ -60,7 +60,7 @@ public class ProductDAO implements IProductDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, p.getCategoryId());
+            ps.setInt(1, resolveCategoryId(conn, p.getCategoryId()));
             ps.setString(2, p.getProductName());
             ps.setDouble(3, p.getPrice());
             ps.setString(4, p.getSize());
@@ -123,6 +123,23 @@ public class ProductDAO implements IProductDAO {
         p.setColor(rs.getString("color"));
         p.setStockQuantity(rs.getInt("stock_quantity"));
         return p;
+    }
+
+    /**
+     * Nếu UI chưa truyền category_id hợp lệ (<=0), tự động dùng category đầu tiên trong DB.
+     * Điều này giúp thao tác "Thêm sản phẩm" không bị fail do thiếu category.
+     */
+    private int resolveCategoryId(Connection conn, int requestedCategoryId) throws SQLException {
+        if (requestedCategoryId > 0) return requestedCategoryId;
+
+        String sql = "SELECT category_id FROM categories ORDER BY category_id LIMIT 1";
+        try (PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt("category_id");
+            }
+        }
+        throw new SQLException("Không tìm thấy category hợp lệ trong bảng categories.");
     }
 
     /** Test nhanh */
